@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/absurdlab/tiga-go-sdk/internal"
+	"gopkg.in/square/go-jose.v2/jwt"
 	"time"
 )
 
@@ -15,11 +16,13 @@ const (
 	ClaimExp = "exp"
 	ClaimNbf = "nbf"
 	ClaimIat = "iat"
+	ClaimIss = "iss"
 )
 
 var (
 	ErrAbsentJti   = errors.New("jti claim is absent")
 	ErrInvalidSub  = errors.New("sub claim is invalid")
+	ErrInvalidIss  = errors.New("iss claim is invalid")
 	ErrInvalidAud  = errors.New("aud claim is invalid")
 	ErrExpExpired  = errors.New("exp claim is invalid because token has expired")
 	ErrIatInFuture = errors.New("iat claim is invalid because token is issued in future")
@@ -32,6 +35,7 @@ type Claims interface {
 	// to return compatible values as follows:
 	//
 	//	jti: string
+	// 	iss: string
 	//	sub: string
 	//	aud: []string, or nil
 	//	exp: time.Time
@@ -41,6 +45,37 @@ type Claims interface {
 	// The above compatible return values will ensure Claims work well with ValidateClaims and
 	// the out-of-box Expect rules.
 	Get(name string) (interface{}, bool)
+}
+
+// NewMapClaims returns a wrapper implementation of Claims around jwt.Claims. This implementation suits the use
+// case where the user simply want to adapt jwt.Claims.
+func NewJWTClaims(claims jwt.Claims) Claims {
+	return &jwtClaims{t: &claims}
+}
+
+type jwtClaims struct {
+	t *jwt.Claims
+}
+
+func (c *jwtClaims) Get(name string) (interface{}, bool) {
+	switch name {
+	case ClaimJti:
+		return c.t.ID, true
+	case ClaimSub:
+		return c.t.Subject, true
+	case ClaimAud:
+		return []string(c.t.Audience), true
+	case ClaimExp:
+		return c.t.Expiry.Time(), true
+	case ClaimNbf:
+		return c.t.NotBefore.Time(), true
+	case ClaimIat:
+		return c.t.IssuedAt.Time(), true
+	case ClaimIss:
+		return c.t.Issuer, true
+	default:
+		return nil, false
+	}
 }
 
 // NewMapClaims returns a new map based implementation of Claims. This implementation store all
@@ -66,7 +101,7 @@ func (c mapClaims) Get(name string) (interface{}, bool) {
 	v, ok := c.m[name]
 	if v != nil {
 		switch name {
-		case ClaimJti, ClaimSub:
+		case ClaimJti, ClaimSub, ClaimIss:
 			switch v.(type) {
 			case string:
 				return v, true
@@ -119,6 +154,18 @@ var (
 			}
 		}
 		return ErrAbsentJti
+	}
+	// ExpectIss expects the "iss" claim to be the same as issuer. If invalid,
+	// ErrInvalidIss is returned.
+	ExpectIss = func(issuer string) Expect {
+		return func(c Claims) error {
+			if v, ok := c.Get(ClaimIss); ok {
+				if iss, ok := v.(string); ok && iss == issuer {
+					return nil
+				}
+			}
+			return ErrInvalidIss
+		}
 	}
 	// ExpectSub returns an Expect rule to check if the subject is present
 	// and is one of the expected subject values. If "sub" is not present, or
