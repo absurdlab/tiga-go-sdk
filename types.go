@@ -50,14 +50,14 @@ type OIDC struct {
 	AcrValues string `json:"acr_values,omitempty"`
 }
 
-// State contains all data that an interaction provider may
+// InteractionState contains all data that an interaction provider may
 // wish to know about the current state of the End-User interaction.
 //
 // Some data are selectively not exposed at certain stage. For instance, before
 // subject is confirmed, scope data is not exposed. And when subject is confirmed,
 // all other candidates authentication sessions are hidden. Client and OIDC data
 // is always returned.
-type State struct {
+type InteractionState struct {
 	// Subject is the subject identifier for the logged in End-User.
 	// This field is optional when the login user had not be determined.
 	// If OP had confirmed a login, this field will be shown along with
@@ -89,8 +89,8 @@ type State struct {
 	OIDC *OIDC `json:"oidc"`
 }
 
-// Callback is the common elements in an interaction callback request.
-type Callback struct {
+// InteractionCallback is the common elements in an interaction callback request.
+type InteractionCallback struct {
 	// Success is an indicator on if the interaction was positively successful.
 	// If successful, operational data will be read from payload; otherwise,
 	// error description will be read.
@@ -112,7 +112,7 @@ type Callback struct {
 
 // LoginCallback is the request payload of a callback made by login interaction provider.
 type LoginCallback struct {
-	Callback
+	InteractionCallback
 
 	// Subject is the IDP unique identifier for the logged in user.
 	Subject string `json:"subject"`
@@ -144,7 +144,7 @@ type LoginCallback struct {
 
 // SelectAccountCallback is the request payload of a callback made by select account interaction provider.
 type SelectAccountCallback struct {
-	Callback
+	InteractionCallback
 
 	// Selection is the subject of one of candidate authentication session
 	// that the user has selected to use as login. The OP must verify that
@@ -154,7 +154,7 @@ type SelectAccountCallback struct {
 
 // ConsentCallback is the request payload of a callback made by consent interaction provider.
 type ConsentCallback struct {
-	Callback
+	InteractionCallback
 
 	// GrantedScopes are the list of scopes that the user has granted access
 	// to the client. The OP must verify that these scopes had indeed been
