@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"github.com/absurdlab/tiga-go-sdk/jwx/internal"
 	"gopkg.in/square/go-jose.v2"
 )
 
@@ -81,3 +82,37 @@ func (k *Key) ToPublic() *Key {
 
 // KeySource is a function that can produce a Key and its corresponding algorithm specs.
 type KeySource func() (*Key, Algs, bool)
+
+// GenerateSignatureKey generates a signature Key with the given kid and algorithm.
+func GenerateSignatureKey(kid string, alg string, bits int) *Key {
+	_, privKey, err := internal.KeygenSig(jose.SignatureAlgorithm(alg), bits)
+	if err != nil {
+		panic(err)
+	}
+
+	return &Key{
+		key: &jose.JSONWebKey{
+			Key:       privKey,
+			KeyID:     kid,
+			Algorithm: alg,
+			Use:       UseSig,
+		},
+	}
+}
+
+// GenerateEncryptionKey generates an encryption Key with the given kid and algorithm.
+func GenerateEncryptionKey(kid string, alg string, bits int) *Key {
+	_, privKey, err := internal.KeygenEnc(jose.KeyAlgorithm(alg), bits)
+	if err != nil {
+		panic(err)
+	}
+
+	return &Key{
+		key: &jose.JSONWebKey{
+			Key:       privKey,
+			KeyID:     kid,
+			Algorithm: alg,
+			Use:       UseEnc,
+		},
+	}
+}
