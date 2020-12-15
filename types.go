@@ -210,6 +210,8 @@ func (c *AccessTokenClaims) Get(name string) (interface{}, bool) {
 		return c.NotBefore.Time(), true
 	case jwx.ClaimIat:
 		return c.IssuedAt.Time(), true
+	case jwx.ClaimIss:
+		return c.Issuer, true
 	case "client":
 		return c.Client, true
 	case "scope":

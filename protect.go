@@ -76,7 +76,7 @@ func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
 
 			var rules []jwx.Expect
 			{
-				rules = append(rules, jwx.ExpectSub(s.discovery.Issuer))
+				rules = append(rules, jwx.ExpectIss(s.discovery.Issuer))
 				rules = append(rules, jwx.ExpectTime(opt.Leeway))
 				if len(opt.Audience) > 0 {
 					rules = append(rules, jwx.ExpectAud(opt.Audience...))
