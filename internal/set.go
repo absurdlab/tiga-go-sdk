@@ -15,11 +15,28 @@ func (s Set) Contains(value string) bool {
 	return contains
 }
 
-func (s Set) ContainsAny(values []string) bool {
-	for _, value := range values {
-		if s.Contains(value) {
+func (s Set) All(criteria func(element string) bool) bool {
+	for e := range s {
+		if ok := criteria(e); !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func (s Set) Any(criteria func(element string) bool) bool {
+	for e := range s {
+		if ok := criteria(e); ok {
 			return true
 		}
 	}
 	return false
+}
+
+func (s Set) ContainsAll(t Set) bool {
+	return t.All(s.Contains)
+}
+
+func (s Set) ContainsAny(t Set) bool {
+	return t.Any(s.Contains)
 }
