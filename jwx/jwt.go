@@ -28,9 +28,6 @@ var (
 
 // Claims is JWT claims.
 type Claims interface {
-	json.Marshaler
-	json.Unmarshaler
-
 	// Get returns the top level claim by its name. For standard claim names, Get needs
 	// to return compatible values as follows:
 	//
@@ -148,7 +145,7 @@ var (
 		return func(c Claims) error {
 			if v, ok := c.Get(ClaimAud); ok && v != nil {
 				if aud, ok := v.([]string); ok {
-					if expected.ContainsAny(aud) {
+					if expected.ContainsAll(internal.NewSet(aud...)) {
 						return nil
 					}
 				}
