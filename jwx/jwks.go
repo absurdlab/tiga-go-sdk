@@ -26,7 +26,14 @@ func ReadKeySet(reader io.Reader) (*KeySet, error) {
 
 	set := &KeySet{ks: map[string]*Key{}}
 	for _, k := range gojoseJwks.Keys {
-		jwk := &Key{key: &k}
+		/*
+		 * !Important!
+		 * -----------
+		 * copy k value onto local stack
+		 * before k changes in the next iteration.
+		 */
+		k0 := k
+		jwk := &Key{key: &k0}
 		set.ks[jwk.Id()] = jwk
 	}
 
