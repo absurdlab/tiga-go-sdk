@@ -57,6 +57,19 @@ type jwtClaims struct {
 	t *jwt.Claims
 }
 
+func (c *jwtClaims) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.t)
+}
+
+func (c *jwtClaims) UnmarshalJSON(bytes []byte) error {
+	t := new(jwt.Claims)
+	if err := json.Unmarshal(bytes, t); err != nil {
+		return err
+	}
+	c.t = t
+	return nil
+}
+
 func (c *jwtClaims) Get(name string) (interface{}, bool) {
 	switch name {
 	case ClaimJti:
@@ -192,7 +205,7 @@ var (
 		return func(c Claims) error {
 			if v, ok := c.Get(ClaimAud); ok && v != nil {
 				if aud, ok := v.([]string); ok {
-					if expected.ContainsAll(internal.NewSet(aud...)) {
+					if internal.NewSet(aud...).ContainsAll(expected) {
 						return nil
 					}
 				}
