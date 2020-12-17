@@ -23,7 +23,7 @@ var (
 	// ErrInvalidGrantType indicates an invalid grant type value.
 	ErrInvalidGrantType = errors.New("grant_type is invalid")
 
-	// ValidResponseType is the validation function for a string containing a grant type.
+	// ValidGrantType is the validation function for a string containing a grant type.
 	ValidGrantType = func(s string) error {
 		switch s {
 		case GrantTypeAuthorizationCode,
