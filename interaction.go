@@ -2,6 +2,7 @@ package tigasdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/absurdlab/tiga-go-sdk/oidc"
 	"github.com/imulab/coldcall"
@@ -11,6 +12,10 @@ import (
 	"github.com/imulab/coldcall/status"
 	"net/http"
 	"net/url"
+)
+
+var (
+	ErrContextTooLarge = errors.New("context data exceeds discovery limit")
 )
 
 // LoginState gets the InteractionState of the login challenge.
@@ -30,6 +35,9 @@ func (s *SDK) ConsentState(ctx context.Context, challenge string) (*InteractionS
 
 // LoginCallback posts the End-User's LoginCallback response back to Tiga.
 func (s *SDK) LoginCallback(ctx context.Context, challenge string, callback *LoginCallback) (bool, error) {
+	if limit := s.discovery.InteractionContextDataKBLimit; limit > 0 && int64(len(callback.Context))/1000 > limit {
+		return false, ErrContextTooLarge
+	}
 	return s.interactionCallback(ctx, s.discovery.LoginEndpoint, challenge, []string{oidc.ScopeTigaLogin}, callback)
 }
 
