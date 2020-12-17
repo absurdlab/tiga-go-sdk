@@ -35,7 +35,7 @@ func (s *SDK) ConsentState(ctx context.Context, challenge string) (*InteractionS
 
 // LoginCallback posts the End-User's LoginCallback response back to Tiga.
 func (s *SDK) LoginCallback(ctx context.Context, challenge string, callback *LoginCallback) (bool, error) {
-	if limit := s.discovery.InteractionContextDataKBLimit; limit > 0 && int64(len(callback.Context))/1000 > limit {
+	if limit := s.discovery.InteractionContextDataKBLimit; limit > 0 && int64(len(callback.Context))/1024 > limit {
 		return false, ErrContextTooLarge
 	}
 	return s.interactionCallback(ctx, s.discovery.LoginEndpoint, challenge, []string{oidc.ScopeTigaLogin}, callback)
