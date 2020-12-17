@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/absurdlab/tiga-go-sdk/internal"
 	"github.com/absurdlab/tiga-go-sdk/jwx"
+	"github.com/absurdlab/tiga-go-sdk/oidc"
 	"net/http"
 	"strings"
 	"time"
@@ -42,7 +43,8 @@ type ProtectOpt struct {
 }
 
 // Protect returns a HTTP middleware to require access token issued by Tiga service in order to access the resource.
-func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
+// This function assumes the caller holds oidc.Discovery and the verifying jwx.KeySet.
+func Protect(discovery *oidc.Discovery, jwks *jwx.KeySet, opt *ProtectOpt) func(http.Handler) http.Handler {
 	if opt == nil {
 		opt = &ProtectOpt{}
 	}
@@ -66,7 +68,7 @@ func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
 			var claims = new(AccessTokenClaims)
 			if err := jwx.Decode(
 				rawToken,
-				s.tigaJwks, nil,
+				jwks, nil,
 				jwx.Algs{Sig: "?"}, // use '?' to trick IsNone, entirely depend on JWS header values
 				claims,
 			); err != nil {
@@ -76,7 +78,7 @@ func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
 
 			var rules []jwx.Expect
 			{
-				rules = append(rules, jwx.ExpectIss(s.discovery.Issuer))
+				rules = append(rules, jwx.ExpectIss(discovery.Issuer))
 				rules = append(rules, jwx.ExpectTime(opt.Leeway))
 				if len(opt.Audience) > 0 {
 					rules = append(rules, jwx.ExpectAud(opt.Audience...))
@@ -117,6 +119,11 @@ func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		})
 	}
+}
+
+// Protect returns a HTTP middleware to require access token issued by Tiga service in order to access the resource.
+func (s *SDK) Protect(opt *ProtectOpt) func(http.Handler) http.Handler {
+	return Protect(s.discovery, s.tigaJwks, opt)
 }
 
 type accessTokenContextKey struct{}
