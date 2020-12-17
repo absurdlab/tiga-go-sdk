@@ -101,6 +101,11 @@ type Discovery struct {
 	// AccessTokenSigningAlgValue is the value of the signing algorithm used to sign
 	// the access token.
 	AccessTokenSigningAlgValue string `json:"access_token_signing_alg_value"`
+
+	// InteractionContextDataKBLimit is the size limit in kilobytes that the context data
+	// of the interaction callback is limited to. If the context data exceeds this size
+	// limit, it will no longer be accepted by Tiga.
+	InteractionContextDataKBLimit int64 `json:"interaction_context_data_kb_limit"`
 }
 
 // ResponseModesSupportedOrDefault returns Discovery#ResponseModesSupported if it is not
