@@ -230,6 +230,7 @@ type TokenResponse struct {
 	ExpiresIn    *int64 `json:"expires_in,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	IdToken      string `json:"id_token,omitempty"`
+	Scope        string `json:"scope,omitempty"`
 }
 
 // ErrorResponse is the response object when error has occurred at token endpoint.
