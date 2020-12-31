@@ -99,6 +99,11 @@ type InteractionCallback struct {
 	// Timestamp is the UNIX timestamp of the indicated event.
 	Timestamp int64 `json:"timestamp"`
 
+	// Nonce is the nonce parameter passed to the interaction provider
+	// on the initial redirect. OP requires this piece of data in order
+	// to prevent replay.
+	Nonce string `json:"nonce"`
+
 	// Error is the IDP specific error code indicating interaction failure.
 	// It will not be returned to the client. The OP logs it for
 	// debugging and auditing purposes.
