@@ -19,46 +19,46 @@ var (
 )
 
 // LoginState gets the InteractionState of the login challenge.
-func (s *SDK) LoginState(ctx context.Context, challenge string) (*InteractionState, error) {
-	return s.getInteractionState(ctx, s.discovery.LoginEndpoint, challenge, []string{oidc.ScopeTigaLogin})
+func (s *SDK) LoginState(ctx context.Context, xid string) (*InteractionState, error) {
+	return s.getInteractionState(ctx, s.discovery.LoginEndpoint, []string{oidc.ScopeTigaLogin}, xid)
 }
 
 // SelectAccountState gets the InteractionState of the select account challenge.
-func (s *SDK) SelectAccountState(ctx context.Context, challenge string) (*InteractionState, error) {
-	return s.getInteractionState(ctx, s.discovery.SelectAccountEndpoint, challenge, []string{oidc.ScopeTigaSelectAccount})
+func (s *SDK) SelectAccountState(ctx context.Context, xid string) (*InteractionState, error) {
+	return s.getInteractionState(ctx, s.discovery.SelectAccountEndpoint, []string{oidc.ScopeTigaSelectAccount}, xid)
 }
 
 // ConsentState gets the InteractionState of the consent challenge.
-func (s *SDK) ConsentState(ctx context.Context, challenge string) (*InteractionState, error) {
-	return s.getInteractionState(ctx, s.discovery.ConsentEndpoint, challenge, []string{oidc.ScopeTigaConsent})
+func (s *SDK) ConsentState(ctx context.Context, xid string) (*InteractionState, error) {
+	return s.getInteractionState(ctx, s.discovery.ConsentEndpoint, []string{oidc.ScopeTigaConsent}, xid)
 }
 
 // LoginCallback posts the End-User's LoginCallback response back to Tiga.
-func (s *SDK) LoginCallback(ctx context.Context, challenge string, callback *LoginCallback) (bool, error) {
+func (s *SDK) LoginCallback(ctx context.Context, xid string, callback *LoginCallback) (bool, error) {
 	if limit := s.discovery.InteractionContextDataKBLimit; limit > 0 && int64(len(callback.Context))/1024 > limit {
 		return false, ErrContextTooLarge
 	}
-	return s.interactionCallback(ctx, s.discovery.LoginEndpoint, challenge, []string{oidc.ScopeTigaLogin}, callback)
+	return s.interactionCallback(ctx, s.discovery.LoginEndpoint, []string{oidc.ScopeTigaLogin}, callback, xid)
 }
 
 // SelectAccountCallback posts the End-User's SelectAccountCallback response back to Tiga.
-func (s *SDK) SelectAccountCallback(ctx context.Context, challenge string, callback *SelectAccountCallback) (bool, error) {
-	return s.interactionCallback(ctx, s.discovery.SelectAccountEndpoint, challenge, []string{oidc.ScopeTigaSelectAccount}, callback)
+func (s *SDK) SelectAccountCallback(ctx context.Context, xid string, callback *SelectAccountCallback) (bool, error) {
+	return s.interactionCallback(ctx, s.discovery.SelectAccountEndpoint, []string{oidc.ScopeTigaSelectAccount}, callback, xid)
 }
 
 // ConsentCallback posts the End-User's ConsentCallback response back to Tiga.
-func (s *SDK) ConsentCallback(ctx context.Context, challenge string, callback *ConsentCallback) (bool, error) {
-	return s.interactionCallback(ctx, s.discovery.ConsentEndpoint, challenge, []string{oidc.ScopeTigaConsent}, callback)
+func (s *SDK) ConsentCallback(ctx context.Context, xid string, callback *ConsentCallback) (bool, error) {
+	return s.interactionCallback(ctx, s.discovery.ConsentEndpoint, []string{oidc.ScopeTigaConsent}, callback, xid)
 }
 
-func (s *SDK) interactionCallback(ctx context.Context, endpoint string, challenge string, scopes []string, callback interface{}) (bool, error) {
+func (s *SDK) interactionCallback(ctx context.Context, endpoint string, scopes []string, callback interface{}, xid string) (bool, error) {
 	tr, err := s.TokenByClientCredentials(ctx, scopes)
 	if err != nil {
 		return false, err
 	}
 
 	req, err := coldcall.Post(ctx, endpoint,
-		addr.WithQueryMap(map[string]string{"challenge": challenge}),
+		addr.WithQueryMap(map[string]string{"xid": xid}),
 		header.ContentType(header.ContentTypeApplicationJSON),
 		header.Custom("Authorization", fmt.Sprintf("%s %s", tr.TokenType, tr.AccessToken)),
 		body.JSONMarshal(callback),
@@ -83,14 +83,14 @@ func (s *SDK) interactionCallback(ctx context.Context, endpoint string, challeng
 	return true, nil
 }
 
-func (s *SDK) getInteractionState(ctx context.Context, endpoint string, challenge string, scopes []string) (*InteractionState, error) {
+func (s *SDK) getInteractionState(ctx context.Context, endpoint string, scopes []string, xid string) (*InteractionState, error) {
 	tr, err := s.TokenByClientCredentials(ctx, scopes)
 	if err != nil {
 		return nil, err
 	}
 
 	req, err := coldcall.Get(ctx, endpoint,
-		addr.WithQueryMap(map[string]string{"challenge": challenge}),
+		addr.WithQueryMap(map[string]string{"xid": xid}),
 		header.Custom("Authorization", fmt.Sprintf("%s %s", tr.TokenType, tr.AccessToken)),
 	)
 	if err != nil {
@@ -121,8 +121,8 @@ func (s *SDK) getInteractionState(ctx context.Context, endpoint string, challeng
 }
 
 // ResumeAuthorize redirects the http response back to the authorize resume endpoint.
-func (s *SDK) ResumeAuthorize(rw http.ResponseWriter, r *http.Request, challenge string) {
+func (s *SDK) ResumeAuthorize(rw http.ResponseWriter, r *http.Request, xid string) {
 	u, _ := url.Parse(s.discovery.AuthorizeResumeEndpoint)
-	u.RawQuery = url.Values{"challenge": []string{challenge}}.Encode()
+	u.RawQuery = url.Values{"xid": []string{xid}}.Encode()
 	http.Redirect(rw, r, u.String(), http.StatusFound)
 }
