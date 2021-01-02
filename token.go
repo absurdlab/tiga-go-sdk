@@ -20,7 +20,6 @@ var (
 	ErrUnexpectedResponse = errors.New("sdk received unexpected response")
 )
 
-// TokenByClientCredentials acquire access tokens using the client_credentials flow.
 func (s *SDK) TokenByClientCredentials(ctx context.Context, scopes []string) (*TokenResponse, error) {
 	options, err := s.createTokenRequest(map[string]string{
 		"client_id":  s.clientId,
@@ -34,7 +33,6 @@ func (s *SDK) TokenByClientCredentials(ctx context.Context, scopes []string) (*T
 	return s.executeTokenRequest(ctx, options)
 }
 
-// TokenByCode acquire access tokens, and optionally refresh token and id_token using the authorization_code flow.
 func (s *SDK) TokenByCode(ctx context.Context, code string, redirectURI string, scopes []string) (*TokenResponse, error) {
 	options, err := s.createTokenRequest(map[string]string{
 		"client_id":    s.clientId,
@@ -50,7 +48,6 @@ func (s *SDK) TokenByCode(ctx context.Context, code string, redirectURI string, 
 	return s.executeTokenRequest(ctx, options)
 }
 
-// TokenByRefreshToken acquire access tokens and refresh token by exchanging in existing refresh token.
 func (s *SDK) TokenByRefreshToken(ctx context.Context, refreshToken string, scopes []string) (*TokenResponse, error) {
 	options, err := s.createTokenRequest(map[string]string{
 		"client_id":     s.clientId,
