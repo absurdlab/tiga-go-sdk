@@ -18,22 +18,18 @@ var (
 	ErrContextTooLarge = errors.New("context data exceeds discovery limit")
 )
 
-// LoginState gets the InteractionState of the login challenge.
 func (s *SDK) LoginState(ctx context.Context, xid string) (*InteractionState, error) {
 	return s.getInteractionState(ctx, s.discovery.LoginEndpoint, []string{oidc.ScopeTigaLogin}, xid)
 }
 
-// SelectAccountState gets the InteractionState of the select account challenge.
 func (s *SDK) SelectAccountState(ctx context.Context, xid string) (*InteractionState, error) {
 	return s.getInteractionState(ctx, s.discovery.SelectAccountEndpoint, []string{oidc.ScopeTigaSelectAccount}, xid)
 }
 
-// ConsentState gets the InteractionState of the consent challenge.
 func (s *SDK) ConsentState(ctx context.Context, xid string) (*InteractionState, error) {
 	return s.getInteractionState(ctx, s.discovery.ConsentEndpoint, []string{oidc.ScopeTigaConsent}, xid)
 }
 
-// LoginCallback posts the End-User's LoginCallback response back to Tiga.
 func (s *SDK) LoginCallback(ctx context.Context, xid string, callback *LoginCallback) (bool, error) {
 	if limit := s.discovery.InteractionContextDataKBLimit; limit > 0 && int64(len(callback.Context))/1024 > limit {
 		return false, ErrContextTooLarge
@@ -41,12 +37,10 @@ func (s *SDK) LoginCallback(ctx context.Context, xid string, callback *LoginCall
 	return s.interactionCallback(ctx, s.discovery.LoginEndpoint, []string{oidc.ScopeTigaLogin}, callback, xid)
 }
 
-// SelectAccountCallback posts the End-User's SelectAccountCallback response back to Tiga.
 func (s *SDK) SelectAccountCallback(ctx context.Context, xid string, callback *SelectAccountCallback) (bool, error) {
 	return s.interactionCallback(ctx, s.discovery.SelectAccountEndpoint, []string{oidc.ScopeTigaSelectAccount}, callback, xid)
 }
 
-// ConsentCallback posts the End-User's ConsentCallback response back to Tiga.
 func (s *SDK) ConsentCallback(ctx context.Context, xid string, callback *ConsentCallback) (bool, error) {
 	return s.interactionCallback(ctx, s.discovery.ConsentEndpoint, []string{oidc.ScopeTigaConsent}, callback, xid)
 }
@@ -120,7 +114,6 @@ func (s *SDK) getInteractionState(ctx context.Context, endpoint string, scopes [
 	}
 }
 
-// ResumeAuthorize redirects the http response back to the authorize resume endpoint.
 func (s *SDK) ResumeAuthorize(rw http.ResponseWriter, r *http.Request, xid string) {
 	u, _ := url.Parse(s.discovery.AuthorizeResumeEndpoint)
 	u.RawQuery = url.Values{"xid": []string{xid}}.Encode()
