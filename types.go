@@ -10,6 +10,7 @@ import (
 // Authentication is a End-User authentication record.
 type Authentication struct {
 	Subject  string          `json:"subject"`
+	IdpId    string          `json:"idp_id"`
 	AuthTime int64           `json:"auth_time"`
 	Context  json.RawMessage `json:"context,omitempty"`
 }
