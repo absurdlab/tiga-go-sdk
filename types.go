@@ -151,10 +151,8 @@ type LoginCallback struct {
 type SelectAccountCallback struct {
 	InteractionCallback
 
-	// Selection is the subject of one of candidate authentication session
-	// that the user has selected to use as login. The OP must verify that
-	// this subject is indeed one of the candidates before accepting it.
-	Subject string `json:"subject"`
+	// SelectId is the id of the selected authentication.
+	SelectedId string `json:"subject"`
 }
 
 // ConsentCallback is the request payload of a callback made by consent interaction provider.
